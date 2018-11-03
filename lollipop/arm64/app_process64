@@ -1,0 +1,5 @@
+#!/system/bin/sh
+ASAN_OPTIONS=start_deactivated=1,alloc_dealloc_mismatch=0,malloc_context_size=0,allow_user_segv_handler=1 \
+ASAN_ACTIVATION_OPTIONS=include_if_exists=/data/local/tmp/asan.options.%b \
+LD_PRELOAD=$LD_PRELOAD:libclang_rt.asan-aarch64-android.so \
+exec /system/bin/app_process64.real $@
