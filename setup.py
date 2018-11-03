@@ -82,7 +82,7 @@ def stop_start():
     adb_shell("start")
 
 
-def install_aosp_4():
+def install_pre_lollipop():
     mount_system()
     adb_shell("cp -p /system/bin/app_process /system/bin/app_process32")
     adb_install("pre-lollipop/app_process", "/system/bin/app_process", "0777")
@@ -91,7 +91,7 @@ def install_aosp_4():
     stop_start()
 
 
-def uninstall_aosp_4():
+def uninstall_pre_lollipop():
     mount_system()
     adb_shell("cp -p /system/bin/app_process /system/bin/app_process.bak")
     adb_shell("cp -p /system/bin/app_process32 /system/bin/app_process")
@@ -99,7 +99,22 @@ def uninstall_aosp_4():
     stop_start()
 
 
-def install_aosp_arm():
+def uninstall_lollipop(is_64=False):
+    mount_system()
+    adb_shell("cp -p /system/bin/app_process32 /system/bin/app_process32.bak")
+    adb_shell("cp -p /system/bin/app_process32.real /system/bin/app_process32")
+
+    if is_64:
+        adb_shell("cp -p /system/bin/app_process64 /system/bin/app_process64.bak")
+        adb_shell("cp -p /system/bin/app_process64.real /system/bin/app_process64")
+
+    if version >= 8:
+        adb_shell("mv /system/etc/ld.config.txt.saved /system/etc/ld.config.txt")
+
+    stop_start()
+
+
+def install_lollipop_arm():
     mount_system()
     adb_shell("cp -p /system/bin/app_process32 /system/bin/app_process32.real")
     adb_install("lollipop/arm/app_process32", "/system/bin/app_process32", "0755", use_context=True)
@@ -112,18 +127,7 @@ def install_aosp_arm():
     stop_start()
 
 
-def uninstall_aosp_arm():
-    mount_system()
-    adb_shell("cp -p /system/bin/app_process32 /system/bin/app_process32.bak")
-    adb_shell("cp -p /system/bin/app_process32.real /system/bin/app_process32")
-
-    if version >= 8:
-        adb_shell("mv /system/etc/ld.config.txt.saved /system/etc/ld.config.txt")
-
-    stop_start()
-
-
-def install_aosp_x86():
+def install_lollipop_x86():
     mount_system()
     adb_shell("cp -p /system/bin/app_process32 /system/bin/app_process32.real")
     adb_install("lollipop/x86/app_process32", "/system/bin/app_process32", "0755", use_context=True)
@@ -136,17 +140,7 @@ def install_aosp_x86():
     stop_start()
 
 
-def uninstall_aosp_x86():
-    mount_system()
-    adb_shell("cp -p /system/bin/app_process32 /system/bin/app_process32.bak")
-    adb_shell("cp -p /system/bin/app_process32.real /system/bin/app_process32")
-
-    if version >= 8:
-        adb_shell("mv /system/etc/ld.config.txt.saved /system/etc/ld.config.txt")
-
-    stop_start()
-
-def install_aosp_arm64():
+def install_lollipop_arm64():
     mount_system()
     adb_shell("cp -p /system/bin/app_process32 /system/bin/app_process32.real")
     adb_install("lollipop/arm64/app_process32", "/system/bin/app_process32", "0755", use_context=True)
@@ -166,20 +160,6 @@ def install_aosp_arm64():
     stop_start()
 
 
-def uninstall_aosp_arm64():
-    mount_system()
-    adb_shell("cp -p /system/bin/app_process32 /system/bin/app_process32.bak")
-    adb_shell("cp -p /system/bin/app_process32.real /system/bin/app_process32")
-
-    adb_shell("cp -p /system/bin/app_process64 /system/bin/app_process64.bak")
-    adb_shell("cp -p /system/bin/app_process64.real /system/bin/app_process64")
-
-    if version >= 8:
-        adb_shell("mv /system/etc/ld.config.txt.saved /system/etc/ld.config.txt")
-
-    stop_start()
-
-
 if __name__ == '__main__':
     revert = False
     opts, args = getopt.getopt(sys.argv[1:], "", ["revert", "use-su"])
@@ -192,25 +172,25 @@ if __name__ == '__main__':
     version = adb_get_version()
     if version < 5:
         if revert:
-            uninstall_aosp_4()
+            uninstall_pre_lollipop()
         else:
-            install_aosp_4()
+            install_pre_lollipop()
     else:
         abi = adb_get_abi()
         print("abi={}".format(abi))
         adb_shell("setenforce 0")
         if abi == "arm":
             if revert:
-                uninstall_aosp_arm()
+                uninstall_lollipop()
             else:
-                install_aosp_arm()
+                install_lollipop_arm()
         elif abi == "arm64":
             if revert:
-                uninstall_aosp_arm64()
+                uninstall_lollipop(is_64=True)
             else:
-                install_aosp_arm64()
+                install_lollipop_arm64()
         elif abi == "x86":
             if revert:
-                uninstall_aosp_x86()
+                uninstall_lollipop()
             else:
-                install_aosp_x86()
+                install_lollipop_x86()
